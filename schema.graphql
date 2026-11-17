@@ -1,0 +1,36 @@
+# Contrato GraphQL del mock de la agencia de viajes.
+# Lo implementa src/mocks/graphql.js (MSW) y lo consume src/api/graphql/ con Apollo Client.
+
+type Query {
+  # Vuelos y hoteles de un destino. soloDisponibles = true excluye vuelos sin asientos
+  # y hoteles sin habitaciones. Destino inexistente: "errors" con extensions.code = "NOT_FOUND".
+  opcionesDestino(destinoId: ID!, soloDisponibles: Boolean = false): OpcionesDestino
+}
+
+type OpcionesDestino {
+  destinoId: ID!
+  vuelos: [Vuelo!]!
+  hoteles: [Hotel!]!
+}
+
+type Vuelo {
+  id: ID!
+  aerolinea: String!
+  origen: String!              # p. ej. "Santiago (SCL)"
+  salida: String!              # fecha y hora, ISO 8601 sin zona horaria
+  llegada: String!             # fecha y hora, ISO 8601 sin zona horaria
+  precio: Int!                 # monto entero en la moneda indicada
+  moneda: String!              # "CLP"
+  asientosDisponibles: Int!
+}
+
+type Hotel {
+  id: ID!
+  nombre: String!
+  estrellas: Int!
+  precioNoche: Int!            # monto entero por noche
+  moneda: String!              # "CLP"
+  checkIn: String!             # fecha, ISO 8601 (YYYY-MM-DD)
+  checkOut: String!            # fecha, ISO 8601 (YYYY-MM-DD)
+  habitacionesDisponibles: Int!
+}
