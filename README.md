@@ -54,6 +54,15 @@ flowchart LR
 
 Rutas centralizadas en [src/routes/AppRoutes.jsx](src/routes/AppRoutes.jsx), con [Layout](src/layouts/Layout.jsx) común y carga diferida de páginas (`React.lazy`).
 
+## Retroalimentación de S4 incorporada
+
+El docente revisó la Formativa 3 (S4) y propuso dos mejoras. Ambas aplican a esta entrega y están resueltas:
+
+| Observación del docente | Cambio en S5 | Dónde |
+|---|---|---|
+| Cancelar la petición al superar el tiempo máximo, para que no siga ejecutándose en segundo plano | Cada petición usa un `AbortController`: al vencer el tiempo máximo se cancela la petición real (REST) o la consulta (GraphQL). | [cliente.js](src/api/cliente.js), [apolloClient.js](src/api/graphql/apolloClient.js); prueba en [rest.test.js](src/test/rest.test.js) |
+| Mensaje de recuperación si el mock no logra iniciarse | Si el Service Worker no se activa, se muestra una pantalla con la causa y un botón para reintentar, en vez de una página en blanco. | [main.jsx](src/main.jsx), [PantallaFalloMock.jsx](src/components/PantallaFalloMock.jsx); prueba en [arranque.test.jsx](src/test/arranque.test.jsx) |
+
 ## Estructura
 
 ```
@@ -82,7 +91,7 @@ Rutas centralizadas en [src/routes/AppRoutes.jsx](src/routes/AppRoutes.jsx), con
     │   ├── browser.js              Service Worker
     │   └── simulacion.js           Escenarios elegidos en el panel de pruebas
     ├── pages/                      Inicio, Destino, NoEncontrado
-    ├── components/                 Tarjetas, estados de carga y error, panel de pruebas
+    ├── components/                 Tarjetas, estados de carga y error, panel de pruebas, pantalla de fallo del mock
     ├── utils/formato.js            Precios en CLP y fechas en español
     └── test/                       Pruebas REST, GraphQL y de navegación
 ```
@@ -104,7 +113,8 @@ npm run build    # versión de producción en dist/
 
 | Archivo | Qué verifica |
 |---|---|
-| [rest.test.js](src/test/rest.test.js) | Listado con país y actividades; detalle; 404 sin reintentos; 500 con reintentos; falta de conexión |
+| [rest.test.js](src/test/rest.test.js) | Listado con país y actividades; detalle; 404 sin reintentos; 500 con reintentos; falta de conexión; cancelación de la petición al superar el tiempo máximo |
+| [arranque.test.jsx](src/test/arranque.test.jsx) | Pantalla de recuperación si el mock no inicia, con botón para reintentar |
 | [graphql.test.js](src/test/graphql.test.js) | Vuelos y hoteles con precios, fechas y disponibilidad; filtro `soloDisponibles`; `NOT_FOUND`; 500 y red; caché de Apollo |
 | [App.test.jsx](src/test/App.test.jsx) | Filtro por país; ficha con vuelos y hoteles; filtros y orden; destino inexistente; error de red; ruta 404; navegación de ida y vuelta |
 
@@ -116,8 +126,8 @@ Matriz de pruebas manuales. Completar con la versión y el resultado real de cad
 
 | Navegador | Versión | Escritorio | Móvil (DevTools) | Observaciones |
 |---|---|---|---|---|
-| Chrome | | ☐ | ☐ | |
-| Edge | | ☐ | ☐ | |
+| Chrome | 157.0.8103.78 | ☑ (inicio, filtro por país, detalle, "Solo opciones disponibles" y panel de pruebas: error del servidor y sin conexión; orden por precio no probado) | ☑ (400 px, una columna) | Móvil probado a 400 px, no a 360 px |
+| Edge | 157.0.4341.46 | ☑ (inicio, filtro por país, detalle, filtros, orden y panel de pruebas: error del servidor y sin conexión) | ☑ (402 px, una columna; panel y detalle) | Móvil probado a 402 px |
 | Firefox | | ☐ | ☐ | |
 | Safari (macOS o iOS) | | ☐ | ☐ | |
 

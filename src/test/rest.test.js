@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { servidor } from "./setup";
-import { pedirJSON, ErrorApi } from "../api/cliente";
+import { pedirJSON, ErrorApi, ajustes } from "../api/cliente";
 import { consultasDestinos } from "../api/rest/destinos";
 import { cambiarEscenario } from "../mocks/simulacion";
 
@@ -63,5 +63,25 @@ describe("API REST de destinos", () => {
     cambiarEscenario("sinConexion");
     const error = await pedirJSON("/api/destinos").catch((e) => e);
     expect(error.tipo).toBe("red");
+  });
+
+  it("cancela la petición real cuando se supera el tiempo máximo", async () => {
+    const tiempoOriginal = ajustes.tiempoMaximo;
+    ajustes.tiempoMaximo = 30;
+    const senales = [];
+    // Simula un servidor que nunca responde y guarda la señal de cancelación de cada intento
+    vi.stubGlobal("fetch", (_url, opciones) => {
+      senales.push(opciones.signal);
+      return new Promise(() => {});
+    });
+    try {
+      const error = await pedirJSON("/api/destinos").catch((e) => e);
+      expect(error.tipo).toBe("tiempo");
+      expect(senales.length).toBe(3); // intento inicial + 2 reintentos
+      expect(senales.every((s) => s.aborted)).toBe(true);
+    } finally {
+      ajustes.tiempoMaximo = tiempoOriginal;
+      vi.unstubAllGlobals();
+    }
   });
 });

@@ -22,21 +22,28 @@ export class ErrorApi extends Error {
 
 const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
 
-function conTiempoMaximo(promesa, ms) {
+// Corta la espera al cumplirse el tiempo máximo y cancela la petición real con el AbortController,
+// para que el navegador no siga ejecutándola en segundo plano.
+export function conTiempoMaximo(promesa, ms, controlador) {
   let temporizador;
   const limite = new Promise((_, rechazar) => {
-    temporizador = setTimeout(
-      () => rechazar(new ErrorApi("tiempo", "El servidor tardó demasiado en responder.")),
-      ms
-    );
+    temporizador = setTimeout(() => {
+      controlador?.abort();
+      rechazar(new ErrorApi("tiempo", "El servidor tardó demasiado en responder."));
+    }, ms);
   });
   return Promise.race([promesa, limite]).finally(() => clearTimeout(temporizador));
 }
 
 async function unaPeticion(ruta) {
+  const controlador = new AbortController();
   let respuesta;
   try {
-    respuesta = await conTiempoMaximo(fetch(new URL(ruta, window.location.origin)), ajustes.tiempoMaximo);
+    respuesta = await conTiempoMaximo(
+      fetch(new URL(ruta, window.location.origin), { signal: controlador.signal }),
+      ajustes.tiempoMaximo,
+      controlador
+    );
   } catch (error) {
     if (error instanceof ErrorApi) throw error;
     // fetch rechaza con TypeError cuando no hay conexión con el servidor
