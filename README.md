@@ -5,7 +5,7 @@
 | **Alumno** | Francisco Parra |
 | **Asignatura** | Desarrollo Frontend II (PFY2202) |
 | **Actividad** | Sumativa 2 – Semana 5: "Integrando nuestro frontend con backend" |
-| **Sitio publicado** | https://fcoxavierparra.github.io/viajes-francisco-parra-pfy2202/ *(se activa al publicar)* |
+| **Sitio publicado** | https://fcoxavierparra.github.io/viajes-francisco-parra-pfy2202/ |
 | **Tecnologías** | React 18, React Router 7, Apollo Client 4 (GraphQL), MSW 2 (mock REST y GraphQL), Tailwind CSS 3, Vite 7, Vitest |
 
 Aplicación de una agencia de viajes. El usuario explora destinos (**API REST mock**) y, al elegir uno, ve sus vuelos y hoteles con precios, fechas y disponibilidad (**API GraphQL mock**).
