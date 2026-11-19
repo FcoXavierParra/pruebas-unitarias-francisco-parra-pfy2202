@@ -128,8 +128,8 @@ Matriz de pruebas manuales. Completar con la versión y el resultado real de cad
 |---|---|---|---|---|
 | Chrome | 157.0.8103.78 | ☑ (inicio, filtro por país, detalle, "Solo opciones disponibles" y panel de pruebas: error del servidor y sin conexión; orden por precio no probado) | ☑ (400 px, una columna) | Móvil probado a 400 px, no a 360 px |
 | Edge | 157.0.4341.46 | ☑ (inicio, filtro por país, detalle, filtros, orden y panel de pruebas: error del servidor y sin conexión) | ☑ (402 px, una columna; panel y detalle) | Móvil probado a 402 px |
-| Firefox | | ☐ | ☐ | |
-| Safari (macOS o iOS) | | ☐ | ☐ | |
+| Firefox | 160.0 (64-bit) | ☑ (inicio, filtro por país, ficha con vuelos y orden por precio, panel de pruebas: error del servidor y sin conexión; "Solo opciones disponibles" no probado) | ☑ (480 px, una columna; ficha, "Solo opciones disponibles" y panel) | Móvil probado a 480 px, no a 360 px. Evidencias en [docs/evidencias/firefox/](docs/evidencias/firefox/) |
+| Safari (iOS 26.6.2, iPhone 11) | 26.6.2 | ☐ (no probado) | ☑ (iPhone 11, una columna; inicio, filtro por país, ficha con vuelos, "Solo opciones disponibles" y orden por precio, panel de pruebas: error del servidor y sin conexión) | Probado en iPhone real, no a 360 px. Hoteles no mostrados en las capturas. Evidencias en [docs/evidencias/safari-ios/](docs/evidencias/safari-ios/) |
 
 Lista de verificación por navegador: carga inicial; navegación entre inicio y un destino; filtro por país; filtros y orden de la página de destino; panel de pruebas con *Error del servidor* y *Sin conexión*; diseño a 360 px y 1280 px.
 
