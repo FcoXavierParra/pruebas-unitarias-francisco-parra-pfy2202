@@ -1,12 +1,11 @@
 import React from "react";
-import { describe, it, expect } from "vitest";
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { ApolloProvider } from "@apollo/client/react";
-import AppRoutes from "../routes/AppRoutes";
-import { clienteGraphQL } from "../api/graphql/apolloClient";
-import { cambiarEscenario } from "../mocks/simulacion";
+import AppRoutes from "../../routes/AppRoutes";
+import { clienteGraphQL } from "../../api/graphql/apolloClient";
+import { cambiarEscenario } from "../../mocks/simulacion";
 
 // Pruebas de navegación completa: REST para el listado y la ficha, GraphQL para vuelos y hoteles
 function renderizar(ruta = "/") {

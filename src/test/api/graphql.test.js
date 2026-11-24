@@ -1,10 +1,9 @@
-import { describe, it, expect } from "vitest";
 import { graphql } from "msw";
-import { servidor } from "./setup";
-import { clienteGraphQL } from "../api/graphql/apolloClient";
-import { DESTINO_OPCIONES } from "../api/graphql/consultas";
-import { traducirErrorGraphQL } from "../api/graphql/errores";
-import { cambiarEscenario } from "../mocks/simulacion";
+import { servidor } from "../setup";
+import { clienteGraphQL } from "../../api/graphql/apolloClient";
+import { DESTINO_OPCIONES } from "../../api/graphql/consultas";
+import { traducirErrorGraphQL } from "../../api/graphql/errores";
+import { cambiarEscenario } from "../../mocks/simulacion";
 
 // Pruebas de la API GraphQL mock, consultada con Apollo Client
 const consultar = (variables, fetchPolicy = "no-cache") =>

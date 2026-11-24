@@ -1,5 +1,5 @@
-// Agrega a Vitest los comparadores de Testing Library (toBeInTheDocument, toBeDisabled, etc.)
-import "@testing-library/jest-dom/vitest";
+// Agrega a Jest los comparadores de Testing Library (toBeInTheDocument, toBeDisabled, etc.)
+import "@testing-library/jest-dom";
 import { setupServer } from "msw/node";
 import { handlers } from "../mocks/handlers";
 import { cambiarEscenario, demoras } from "../mocks/simulacion";
@@ -36,6 +36,7 @@ beforeEach(async () => {
   cambiarEscenario("normal");
   reiniciarCache();
   localStorage.clear();
+  sessionStorage.clear();
   // El cliente Apollo se importa aquí (y no arriba) para que lea los tiempos cortos ya ajustados
   const { clienteGraphQL } = await import("../api/graphql/apolloClient");
   await clienteGraphQL.clearStore();

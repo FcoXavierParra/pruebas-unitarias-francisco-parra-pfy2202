@@ -1,9 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
 import { http, HttpResponse } from "msw";
-import { servidor } from "./setup";
-import { pedirJSON, ErrorApi, ajustes } from "../api/cliente";
-import { consultasDestinos } from "../api/rest/destinos";
-import { cambiarEscenario } from "../mocks/simulacion";
+import { servidor } from "../setup";
+import { pedirJSON, ErrorApi, ajustes } from "../../api/cliente";
+import { consultasDestinos } from "../../api/rest/destinos";
+import { cambiarEscenario } from "../../mocks/simulacion";
 
 // Pruebas de la API REST mock: listado de destinos y detalle, con sus errores
 describe("API REST de destinos", () => {
@@ -30,7 +29,7 @@ describe("API REST de destinos", () => {
   });
 
   it("responde 404 con mensaje y no reintenta un destino inexistente", async () => {
-    const espia = vi.fn();
+    const espia = jest.fn();
     servidor.use(
       http.get("/api/destinos/:id", ({ request }) => {
         espia(request.url);
@@ -70,10 +69,11 @@ describe("API REST de destinos", () => {
     ajustes.tiempoMaximo = 30;
     const senales = [];
     // Simula un servidor que nunca responde y guarda la señal de cancelación de cada intento
-    vi.stubGlobal("fetch", (_url, opciones) => {
+    const fetchOriginal = globalThis.fetch;
+    globalThis.fetch = (_url, opciones) => {
       senales.push(opciones.signal);
       return new Promise(() => {});
-    });
+    };
     try {
       const error = await pedirJSON("/api/destinos").catch((e) => e);
       expect(error.tipo).toBe("tiempo");
@@ -81,7 +81,7 @@ describe("API REST de destinos", () => {
       expect(senales.every((s) => s.aborted)).toBe(true);
     } finally {
       ajustes.tiempoMaximo = tiempoOriginal;
-      vi.unstubAllGlobals();
+      globalThis.fetch = fetchOriginal;
     }
   });
 });
