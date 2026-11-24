@@ -1,50 +1,133 @@
-# Viajes Rumbo Sur · Destinos, vuelos y hoteles
+# Viajes Rumbo Sur · Pruebas unitarias con Jest y React Testing Library
 
 | | |
 |---|---|
 | **Alumno** | Francisco Parra |
 | **Asignatura** | Desarrollo Frontend II (PFY2202) |
-| **Actividad** | Sumativa 2 – Semana 5: "Integrando nuestro frontend con backend" |
-| **Sitio publicado** | https://fcoxavierparra.github.io/viajes-francisco-parra-pfy2202/ |
-| **Tecnologías** | React 18, React Router 7, Apollo Client 4 (GraphQL), MSW 2 (mock REST y GraphQL), Tailwind CSS 3, Vite 7, Vitest |
+| **Actividad** | Formativa 4 – Semana 6: "Desarrollando y ejecutando pruebas unitarias" |
+| **Aplicación probada** | Agencia de viajes de la Sumativa 2 (S5): destinos por REST, vuelos y hoteles por GraphQL |
+| **Sitio publicado** | https://fcoxavierparra.github.io/pruebas-unitarias-francisco-parra-pfy2202/ |
+| **Informe de cobertura** | https://fcoxavierparra.github.io/pruebas-unitarias-francisco-parra-pfy2202/cobertura/ |
+| **Tecnologías de prueba** | Jest 30, React Testing Library 16, user-event 14, MSW 2 (`msw/node`), Babel |
 
-Aplicación de una agencia de viajes. El usuario explora destinos (**API REST mock**) y, al elegir uno, ve sus vuelos y hoteles con precios, fechas y disponibilidad (**API GraphQL mock**).
+## Resultado
 
-## Recorrido sugerido
+`npm test` ejecuta **98 pruebas en 15 archivos**, todas exitosas, y mide la cobertura de todo el código de la aplicación:
 
-1. En el **inicio** se listan los destinos con su país y actividades populares (`GET /api/destinos`). Se puede filtrar por país; el filtro queda en la URL (`?pais=Chile`).
-2. Al elegir un destino se abre su **ficha** (`GET /api/destinos/:id`) y, en la misma página, sus **vuelos y hoteles** con una sola consulta GraphQL (`DestinoOpciones`).
-3. En la página del destino: marcar **Solo opciones disponibles** (la consulta se repite con esa variable) y cambiar el **orden por precio**.
-4. Abrir un destino inexistente, por ejemplo `/destinos/atlantida`, o una ruta que no existe.
-5. En el **panel de pruebas** (al pie de la página) elegir un escenario (red lenta, servidor con error, sin conexión) y observar cómo responde la interfaz.
+| Métrica | Exigido | Obtenido |
+|---|---|---|
+| Sentencias (Stmts) | ≥ 50 % | **98,13 %** (316 / 322) |
+| Funciones (Funcs) | ≥ 50 % | **97,47 %** (116 / 119) |
+| Líneas (Lines) | ≥ 50 % | **98,53 %** (269 / 273) |
+| Ramas (Branch), no exigido | — | 90,32 % (168 / 186) |
 
-## Arquitectura
+El mínimo de 50 % está configurado como **umbral obligatorio** en Jest (`coverageThreshold` en [jest.config.cjs](jest.config.cjs)). Si alguna métrica bajara de ese valor, `npm test` fallaría y GitHub Actions no publicaría el sitio. El informe HTML, con el detalle archivo por archivo y las líneas cubiertas, se publica en cada despliegue en [/cobertura/](https://fcoxavierparra.github.io/pruebas-unitarias-francisco-parra-pfy2202/cobertura/).
+
+### Cómo ejecutarlas
+
+Requiere Node.js 24.
+
+```bash
+git clone https://github.com/FcoXavierParra/pruebas-unitarias-francisco-parra-pfy2202.git
+cd pruebas-unitarias-francisco-parra-pfy2202
+npm install
+npm test                 # Jest con cobertura (tabla en consola + informe en coverage/index.html)
+npx jest --verbose       # lista cada prueba por su nombre
+npx jest src/test/hooks  # solo un grupo de pruebas
+```
+
+---
+
+## Cumplimiento de la pauta
+
+### 1. Implementación y utilización de Jest
+
+**Configuración** ([jest.config.cjs](jest.config.cjs) y [babel.config.cjs](babel.config.cjs)):
+
+| Opción | Para qué |
+|---|---|
+| `testEnvironment: "jest-fixed-jsdom"` | Simula el navegador (DOM) conservando `fetch`, `Request` y `Response` de Node, que MSW necesita para interceptar las peticiones |
+| `transform` con `babel-jest` | Babel traduce JSX e `import/export` para Jest. El sitio se sigue compilando con Vite |
+| `transformIgnorePatterns` | Transforma tres dependencias de MSW que solo se publican como módulos ES |
+| `setupFilesAfterEnv` | [src/test/setup.js](src/test/setup.js) prepara cada prueba: servidor MSW, tiempos cortos, caché y almacenamiento limpios |
+| `collectCoverageFrom` | Mide todo `src/`, salvo las pruebas, `main.jsx` y `mocks/browser.js`, que solo existen en el navegador real (Service Worker) |
+| `coverageThreshold` | Exige ≥ 50 % de sentencias, funciones y líneas |
+
+**Herramientas de Jest utilizadas en las pruebas:**
+
+| Herramienta | Uso | Ejemplo |
+|---|---|---|
+| `describe`, `it`, `test` | Agrupar y nombrar cada caso | Todas las pruebas |
+| `test.each` | Una prueba con una tabla de casos | [formato.test.js](src/test/utils/formato.test.js), [errores.test.js](src/test/api/errores.test.js), [MensajeError.test.jsx](src/test/componentes/MensajeError.test.jsx) |
+| `jest.fn()` con `mockResolvedValue` y `mockRejectedValueOnce` | Simular funciones y contar sus llamadas | [cache.test.js](src/test/api/cache.test.js), [useConsulta.test.jsx](src/test/hooks/useConsulta.test.jsx) |
+| `jest.spyOn(...).mockImplementation` | Simular un navegador que bloquea `localStorage` o `sessionStorage` | [cache.test.js](src/test/api/cache.test.js), [simulacion.test.js](src/test/mocks/simulacion.test.js) |
+| `jest.useFakeTimers` y `jest.setSystemTime` | Adelantar el reloj 5 minutos para probar el vencimiento de la caché sin esperar | [cache.test.js](src/test/api/cache.test.js) |
+| `jest.isolateModules` | Cargar un módulo desde cero, como si se recargara la página | [cache.test.js](src/test/api/cache.test.js), [simulacion.test.js](src/test/mocks/simulacion.test.js) |
+| `toMatchSnapshot` | Detectar cambios inesperados en la estructura de un componente | [Tarjetas.test.jsx](src/test/componentes/Tarjetas.test.jsx) |
+| Comparadores asíncronos (`resolves`, `rejects`) | Verificar promesas que se cumplen o fallan | [cache.test.js](src/test/api/cache.test.js), [rest.test.js](src/test/api/rest.test.js) |
+
+### 2. Implementación y utilización de React Testing Library
+
+Las pruebas buscan los elementos como lo haría el usuario, **por rol, nombre accesible, etiqueta o texto visible** (`getByRole`, `getByLabelText`, `findByRole`), nunca por clases internas. Las interacciones se simulan con **user-event**: clics, selección en listas y casillas de verificación.
+
+| Nivel | Qué se prueba con RTL | Archivos |
+|---|---|---|
+| **Componentes simples** | Tarjetas con datos por props, botones y avisos, indicador de carga | [Tarjetas](src/test/componentes/Tarjetas.test.jsx), [ui](src/test/componentes/ui.test.jsx), [EstadoCarga](src/test/componentes/EstadoCarga.test.jsx) |
+| **Componentes con interacción** | Mensajes de error con *Reintentar* (`jest.fn` recibe el clic); panel de pruebas que se abre, cambia el escenario del servidor y muestra contadores en vivo | [MensajeError](src/test/componentes/MensajeError.test.jsx), [PanelPruebas](src/test/componentes/PanelPruebas.test.jsx), [PantallaFalloMock](src/test/componentes/PantallaFalloMock.test.jsx) |
+| **Hook de datos** | `renderHook`: estados cargando → datos → error, reintento, número de intento y descarte de respuestas que llegan tarde | [useConsulta](src/test/hooks/useConsulta.test.jsx) |
+| **Flujos de datos en páginas completas** | Navegación con React Router y Apollo reales: listado de destinos por REST, filtro por país en la URL, ficha del destino con vuelos y hoteles por GraphQL, filtro "Solo opciones disponibles", orden por precio, errores con reintento, destino inexistente y ruta 404 | [navegacion](src/test/integracion/navegacion.test.jsx), [App](src/test/integracion/App.test.jsx) |
+
+### 3. Pruebas unitarias para lograr cobertura del código
+
+**MSW simula todas las integraciones con el backend.** Las pruebas usan los mismos handlers del sitio publicado ([handlers.js](src/mocks/handlers.js) para REST y [graphql.js](src/mocks/graphql.js) para GraphQL), ejecutados en Node con `setupServer` de `msw/node`. La configuración `onUnhandledRequest: "error"` hace fallar cualquier prueba que intente llamar a un endpoint sin mock. Los escenarios de falla (500, sin conexión, servidor inestable) se activan desde las mismas pruebas.
+
+**Organización:** una carpeta por capa, que refleja la estructura de `src/`:
+
+| Carpeta | Archivo | Pruebas | Qué verifica |
+|---|---|---|---|
+| `utils/` | [formato.test.js](src/test/utils/formato.test.js) | 9 | Precios en CLP, fechas sin desfase por zona horaria, cálculo de noches |
+| `api/` | [rest.test.js](src/test/api/rest.test.js) | 7 | API REST mock: listado, detalle, 404 sin reintentos, 500 con reintentos, sin conexión, cancelación al superar el tiempo máximo |
+| | [graphql.test.js](src/test/api/graphql.test.js) | 6 | API GraphQL mock con Apollo: vuelos y hoteles, `soloDisponibles`, `NOT_FOUND`, 500, red y caché de Apollo |
+| | [errores.test.js](src/test/api/errores.test.js) | 8 | Traducción de cada tipo de error de Apollo al error común |
+| | [cache.test.js](src/test/api/cache.test.js) | 11 | Reutilización, peticiones compartidas, vencimiento, fallas, suscripciones y almacenamiento bloqueado |
+| `mocks/` | [simulacion.test.js](src/test/mocks/simulacion.test.js) | 8 | Escenarios del simulador y su recuperación al recargar |
+| `hooks/` | [useConsulta.test.jsx](src/test/hooks/useConsulta.test.jsx) | 7 | Estados del hook y respuestas tardías |
+| `componentes/` | 6 archivos | 31 | Mensajes de error, carga, tarjetas (con snapshot), botones, panel de pruebas, aviso de almacenamiento, pantalla de fallo del mock |
+| `integracion/` | [navegacion.test.jsx](src/test/integracion/navegacion.test.jsx), [App.test.jsx](src/test/integracion/App.test.jsx) | 11 | Flujos completos de usuario |
+| | **Total** | **98** | |
+
+**Las pruebas detectan errores reales.** Se comprobó alterando el código a propósito. Si se quita la protección contra respuestas tardías del hook, o se cambia el código `NOT_FOUND` en la traducción de errores, la prueba correspondiente falla.
+
+**Lo no cubierto y por qué:** quedan 4 líneas sin ejecutar, todas de casos defensivos:
+- el navegador bloquea `localStorage` justo al abrir la página ([cache.js](src/api/cache.js));
+- el servidor responde un código 4xx distinto de 404 ([cliente.js](src/api/cliente.js));
+- falla la consulta GraphQL sin datos previos ([Destino.jsx](src/pages/Destino.jsx));
+- un país sin destinos en el filtro ([Inicio.jsx](src/pages/Inicio.jsx)), que no ocurre con los datos actuales. Se excluyen de la medición `main.jsx` y `mocks/browser.js`, porque registran el Service Worker real del navegador, que no existe en Node; su comportamiento ante fallas se prueba con `PantallaFalloMock`.
+
+---
+
+## Continuidad con la Sumativa 2 (S5)
+
+La aplicación es la misma agencia de viajes de S5, con su historial de commits. En S6 no cambió el funcionamiento del sitio, solo las pruebas:
+
+| Cambio | Detalle |
+|---|---|
+| Vitest → **Jest** | Las 24 pruebas de S5 se migraron a Jest y se reorganizaron por carpetas |
+| Pruebas nuevas | 74 pruebas unitarias nuevas de componentes, hook, caché, simulador, errores y formatos |
+| Cobertura | Medida con Jest, con umbral obligatorio y publicada en GitHub Pages |
+| Código de la aplicación | Solo se corrigió el comentario de ejemplo de las fechas en `formato.js` |
+
+**Arquitectura de la aplicación probada:**
 
 ```mermaid
 flowchart LR
   P[Páginas] -->|useConsulta| R[REST: pedirJSON]
   P -->|useQuery| G[GraphQL: Apollo Client]
-  R -->|GET /api/...| W[MSW Service Worker]
+  R -->|GET /api/...| W[MSW<br/>Service Worker en el sitio<br/>setupServer en Jest]
   G -->|POST /graphql| W
   W --> H1[handlers.js REST]
   W --> H2[graphql.js DestinoOpciones]
-  H1 --> D[(datos.js)]
-  H2 --> D
 ```
-
-- **REST** (`src/api/rest/`, `src/api/cliente.js`): listado y detalle de destinos. Errores clasificados por tipo (`no-encontrado`, `servidor`, `red`, `tiempo`), tiempo máximo de 8 s y reintentos automáticos ante fallas temporales. Respuestas en caché por 5 minutos (`src/api/cache.js`).
-- **GraphQL** (`src/api/graphql/`): Apollo Client con reintentos (`RetryLink`) solo ante fallas de red o 5xx, nunca ante errores GraphQL. Los errores se traducen al mismo tipo que REST (`errores.js`), así `MensajeError` muestra mensajes iguales en ambas APIs.
-- **Mock**: MSW intercepta `/api/*` y `/graphql` en el navegador (Service Worker). En GitHub Pages no hay servidor propio, por eso el mock también se activa en producción. El contrato GraphQL está en [schema.graphql](schema.graphql).
-
-### Estado con `useState` y `useEffect`
-
-| Dónde | Qué |
-|---|---|
-| `pages/Inicio.jsx` | `useState` del filtro por país; `useEffect` lo sincroniza con la URL |
-| `pages/Destino.jsx` | `useState` de *solo disponibles* y del orden; `useEffect` reinicia los filtros al cambiar de destino y cambia el título de la pestaña |
-| `hooks/useConsulta.js` | `useState` + `useEffect` para cargar datos REST, mostrar datos guardados y descartar respuestas tardías |
-
-## Rutas (React Router 7)
 
 | Ruta | Página | Datos |
 |---|---|---|
@@ -52,91 +135,24 @@ flowchart LR
 | `/destinos/:id` | Ficha, vuelos y hoteles | REST `GET /api/destinos/:id` + GraphQL `DestinoOpciones` |
 | `*` | Página no encontrada | — |
 
-Rutas centralizadas en [src/routes/AppRoutes.jsx](src/routes/AppRoutes.jsx), con [Layout](src/layouts/Layout.jsx) común y carga diferida de páginas (`React.lazy`).
-
-## Retroalimentación de S4 incorporada
-
-El docente revisó la Formativa 3 (S4) y propuso dos mejoras. Ambas aplican a esta entrega y están resueltas:
-
-| Observación del docente | Cambio en S5 | Dónde |
-|---|---|---|
-| Cancelar la petición al superar el tiempo máximo, para que no siga ejecutándose en segundo plano | Cada petición usa un `AbortController`: al vencer el tiempo máximo se cancela la petición real (REST) o la consulta (GraphQL). | [cliente.js](src/api/cliente.js), [apolloClient.js](src/api/graphql/apolloClient.js); prueba en [rest.test.js](src/test/rest.test.js) |
-| Mensaje de recuperación si el mock no logra iniciarse | Si el Service Worker no se activa, se muestra una pantalla con la causa y un botón para reintentar, en vez de una página en blanco. | [main.jsx](src/main.jsx), [PantallaFalloMock.jsx](src/components/PantallaFalloMock.jsx); prueba en [arranque.test.jsx](src/test/arranque.test.jsx) |
-
-## Estructura
+## Estructura de las pruebas
 
 ```
-├── index.html
-├── schema.graphql                  Contrato GraphQL
-├── public/mockServiceWorker.js     Service Worker de MSW
-├── .github/workflows/deploy.yml    Pruebas, build y despliegue a GitHub Pages
-└── src/
-    ├── main.jsx                    Activa el mock, ApolloProvider y el router
-    ├── routes/AppRoutes.jsx
-    ├── layouts/Layout.jsx
-    ├── api/
-    │   ├── cliente.js              Cliente REST: errores, tiempo máximo, reintentos
-    │   ├── cache.js                Caché REST y contadores del panel de pruebas
-    │   ├── rest/destinos.js        Consultas REST
-    │   └── graphql/
-    │       ├── apolloClient.js     Cliente Apollo, tiempo máximo y reintentos
-    │       ├── consultas.js        Consulta DestinoOpciones
-    │       └── errores.js          Errores GraphQL → tipos comunes
-    ├── hooks/useConsulta.js
-    ├── mocks/
-    │   ├── datos.js                Destinos, vuelos y hoteles
-    │   ├── falla.js                Escenarios de error compartidos
-    │   ├── handlers.js             Handlers REST
-    │   ├── graphql.js              Handler GraphQL
-    │   ├── browser.js              Service Worker
-    │   └── simulacion.js           Escenarios elegidos en el panel de pruebas
-    ├── pages/                      Inicio, Destino, NoEncontrado
-    ├── components/                 Tarjetas, estados de carga y error, panel de pruebas, pantalla de fallo del mock
-    ├── utils/formato.js            Precios en CLP y fechas en español
-    └── test/                       Pruebas REST, GraphQL y de navegación
+├── jest.config.cjs              Configuración de Jest y umbral de cobertura
+├── babel.config.cjs             JSX e import/export para Jest
+└── src/test/
+    ├── setup.js                 Servidor MSW (REST + GraphQL), jest-dom, limpieza entre pruebas
+    ├── utils/                   Funciones puras
+    ├── api/                     Clientes REST y GraphQL, errores y caché
+    ├── mocks/                   Simulador de escenarios del backend
+    ├── hooks/                   useConsulta
+    ├── componentes/             Componentes de interfaz (+ __snapshots__)
+    └── integracion/             Flujos completos con React Router y Apollo
 ```
-
-## Ejecución local
-
-Requiere Node.js 24.
-
-```bash
-npm install
-npm run dev      # http://localhost:5173 (el mock se activa solo)
-npm test         # pruebas automatizadas
-npm run build    # versión de producción en dist/
-```
-
-## Pruebas automatizadas
-
-`npm test` ejecuta las pruebas con Vitest y Testing Library, usando los mismos handlers del sitio ejecutados en Node (`msw/node`).
-
-| Archivo | Qué verifica |
-|---|---|
-| [rest.test.js](src/test/rest.test.js) | Listado con país y actividades; detalle; 404 sin reintentos; 500 con reintentos; falta de conexión; cancelación de la petición al superar el tiempo máximo |
-| [arranque.test.jsx](src/test/arranque.test.jsx) | Pantalla de recuperación si el mock no inicia, con botón para reintentar |
-| [graphql.test.js](src/test/graphql.test.js) | Vuelos y hoteles con precios, fechas y disponibilidad; filtro `soloDisponibles`; `NOT_FOUND`; 500 y red; caché de Apollo |
-| [App.test.jsx](src/test/App.test.jsx) | Filtro por país; ficha con vuelos y hoteles; filtros y orden; destino inexistente; error de red; ruta 404; navegación de ida y vuelta |
-
-El workflow de GitHub Actions ejecuta estas pruebas antes de publicar: si alguna falla, el sitio no se publica.
-
-## Compatibilidad de navegadores
-
-Matriz de pruebas manuales. Completar con la versión y el resultado real de cada prueba.
-
-| Navegador | Versión | Escritorio | Móvil (DevTools) | Observaciones |
-|---|---|---|---|---|
-| Chrome | 157.0.8103.78 | ☑ (inicio, filtro por país, detalle, "Solo opciones disponibles" y panel de pruebas: error del servidor y sin conexión; orden por precio no probado) | ☑ (400 px, una columna) | Móvil probado a 400 px, no a 360 px |
-| Edge | 157.0.4341.46 | ☑ (inicio, filtro por país, detalle, filtros, orden y panel de pruebas: error del servidor y sin conexión) | ☑ (402 px, una columna; panel y detalle) | Móvil probado a 402 px |
-| Firefox | 160.0 (64-bit) | ☑ (inicio, filtro por país, ficha con vuelos y orden por precio, panel de pruebas: error del servidor y sin conexión; "Solo opciones disponibles" no probado) | ☑ (480 px, una columna; ficha, "Solo opciones disponibles" y panel) | Móvil probado a 480 px, no a 360 px. Evidencias en [docs/evidencias/firefox/](docs/evidencias/firefox/) |
-| Safari (iOS 26.6.2, iPhone 11) | 26.6.2 | ☐ (no probado) | ☑ (iPhone 11, una columna; inicio, filtro por país, ficha con vuelos, "Solo opciones disponibles" y orden por precio, panel de pruebas: error del servidor y sin conexión) | Probado en iPhone real, no a 360 px. Hoteles no mostrados en las capturas. Evidencias en [docs/evidencias/safari-ios/](docs/evidencias/safari-ios/) |
-
-Lista de verificación por navegador: carga inicial; navegación entre inicio y un destino; filtro por país; filtros y orden de la página de destino; panel de pruebas con *Error del servidor* y *Sin conexión*; diseño a 360 px y 1280 px.
 
 ## Publicación
 
-1. Crear el repositorio en GitHub y subir el contenido de esta carpeta.
-2. En *Settings → Pages*, elegir **GitHub Actions** como origen.
-3. Cada push a `main` ejecuta el workflow: pruebas, build con `BASE_PATH` igual al nombre del repositorio y publicación.
-
-`404.html` se genera a partir de `index.html` para que las rutas de React Router funcionen al recargar en GitHub Pages.
+Cada push a `main` ejecuta GitHub Actions ([deploy.yml](.github/workflows/deploy.yml)) en este orden:
+1. `npm test` (Jest con cobertura).
+2. Build con Vite.
+3. Publicación del sitio y del informe de cobertura en GitHub Pages.
